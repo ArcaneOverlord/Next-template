@@ -90,8 +90,8 @@ export default function StudyApp() {
           ) : (
             <Dashboard onOpenAdd={() => setIsAddModalOpen(true)} />
           )}
-        </main>
-                <main className="p-4 max-w-5xl mx-auto w-full space-y-6">
+        
+                <div> className="p-4 max-w-5xl mx-auto w-full space-y-6">
           {/* Conditional Rendering based on current state */}
           {activeBook ? (
             <BookEditor bookId={activeBook.id} bookName={activeBook.name} />
@@ -100,6 +100,7 @@ export default function StudyApp() {
           ) : (
             <Dashboard onOpenAdd={() => setIsAddModalOpen(true)} />
           )}
+          </div>
         </main>
 
       </div>
