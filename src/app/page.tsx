@@ -47,7 +47,7 @@ export default function StudyApp() {
       {showOnboarding && (
         <div className="fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-md p-8 text-center shadow-2xl relative">
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome&comma; {userName}!</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome {userName}!</h2>
             <p className="text-gray-600 mb-6">Let&apos;s build your Library.</p>
             <button onClick={() => { closeOnboarding(); handleNavigate('library'); }} className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition mb-4">
               Go to Library
