@@ -11,13 +11,40 @@ export default function StudyApp() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  
+  // New state to track if we should show the initial onboarding popup
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  const handleLogin = (isFirstTime: boolean) => {
+    setIsLoggedIn(true);
+    if (isFirstTime) {
+      setShowOnboarding(true);
+    }
+  };
 
   if (!isLoggedIn) {
-    return <LoginPanel onLogin={() => setIsLoggedIn(true)} />;
+    return <LoginPanel onLogin={handleLogin} />;
   }
 
   return (
     <div className="min-h-screen bg-gray-50 flex font-sans">
+      {/* Onboarding Modal for First Time Users */}
+      {showOnboarding && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md p-8 text-center shadow-2xl relative">
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome!</h2>
+            <p className="text-gray-600 mb-6">What is the first topic you want to master?</p>
+            <input type="text" placeholder="e.g., JavaScript, History, etc." className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 bg-gray-50 mb-4" />
+            <button onClick={() => { setShowOnboarding(false); setIsAddModalOpen(true); }} className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition mb-4">
+              Start Learning
+            </button>
+            <button onClick={() => setShowOnboarding(false)} className="text-gray-500 font-medium hover:text-gray-800 transition">
+              Skip for now
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Overlay */}
       {isDrawerOpen && (
         <div 
@@ -41,7 +68,7 @@ export default function StudyApp() {
         </header>
 
         <main className="p-4 max-w-4xl mx-auto w-full space-y-6">
-          <Dashboard />
+          <Dashboard onOpenAdd={() => setIsAddModalOpen(true)} />
         </main>
       </div>
 
