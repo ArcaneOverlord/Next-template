@@ -13,7 +13,6 @@ export default function AddContentModal({ onClose }: AddContentModalProps) {
   const [days, setDays] = useState('');
 
   const handleFetchOptimalTime = () => {
-    // We will connect Gemini here later
     setDays('21'); 
     setStep(2);
   };
@@ -35,7 +34,7 @@ export default function AddContentModal({ onClose }: AddContentModalProps) {
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 placeholder="e.g., JavaScript Fundamentals" 
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white placeholder-gray-400" 
               />
               <button 
                 onClick={handleFetchOptimalTime}
@@ -53,7 +52,7 @@ export default function AddContentModal({ onClose }: AddContentModalProps) {
                     type="number" 
                     value={days}
                     onChange={(e) => setDays(e.target.value)}
-                    className="w-20 p-2 border border-gray-300 rounded-md font-bold text-center"
+                    className="w-20 p-2 border border-gray-300 rounded-md font-bold text-center text-gray-900 bg-white focus:ring-2 focus:ring-blue-500"
                   />
                   <span className="text-gray-600 font-medium">Days</span>
                 </div>
