@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/layout/Sidebar';
-import Dashboard from '../components/layout/Dashboard'; // Note: Ensure you move Dashboard to the layout folder!
+import Dashboard from '../components/layout/Dashboard';
 import LibraryBrowser from '../components/library/LibraryBrowser';
-import LibraryBrowser from '../components/library/BookEditor.tsx';
+import BookEditor from '../components/library/BookEditor'; // <-- Fixed Import
 import AddContentModal from '../components/AddContentModal';
 import { Menu } from 'lucide-react';
 
@@ -13,9 +13,7 @@ export default function StudyApp() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   
-  // NEW: State to track which page we are on
   const [currentPage, setCurrentPage] = useState('home'); 
-  // NEW: State to track if a book is actively being edited
   const [activeBook, setActiveBook] = useState<{id: string, name: string} | null>(null);
 
   const userName = "Test User";
@@ -35,7 +33,7 @@ export default function StudyApp() {
 
   const handleNavigate = (page: string) => {
     setCurrentPage(page);
-    setActiveBook(null); // Close any open book when navigating via sidebar
+    setActiveBook(null); 
   };
 
   const handleOpenBook = (bookId: string, bookName: string) => {
@@ -79,28 +77,15 @@ export default function StudyApp() {
           </div>
         </header>
 
-        <main className="p-4 max-w-4xl mx-auto w-full space-y-6">
-          {/* Conditional Rendering based on current state */}
-          {activeBook ? (
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 min-h-[600px] flex items-center justify-center text-gray-400">
-              Book Editor will load here for: {activeBook.name}
-            </div>
-          ) : currentPage === 'library' ? (
-            <LibraryBrowser onOpenBook={handleOpenBook} />
-          ) : (
-            <Dashboard onOpenAdd={() => setIsAddModalOpen(true)} />
-          )}
-        
-                <div> className="p-4 max-w-5xl mx-auto w-full space-y-6">
-          {/* Conditional Rendering based on current state */}
+        {/* Cleaned up main rendering area */}
+        <main className="p-4 max-w-5xl mx-auto w-full space-y-6">
           {activeBook ? (
             <BookEditor bookId={activeBook.id} bookName={activeBook.name} />
           ) : currentPage === 'library' ? (
             <LibraryBrowser onOpenBook={handleOpenBook} />
           ) : (
-            <Dashboard onOpenAdd={() => setIsAddModalOpen(true)} />
+             <Dashboard onOpenAdd={() => setIsAddModalOpen(true)} />
           )}
-          </div>
         </main>
 
       </div>
