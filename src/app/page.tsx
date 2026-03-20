@@ -1,61 +1,53 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import LoginPanel from '../components/LoginPanel';
 import Sidebar from '../components/Sidebar';
 import Dashboard from '../components/Dashboard';
 import AddContentModal from '../components/AddContentModal';
 import { Menu } from 'lucide-react';
 
 export default function StudyApp() {
-  const [session, setSession] = useState<any>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
+  // We use dummy user data to completely bypass login
+  const userName = "Test User";
+  const userEmail = "test@example.com";
+
+  // Simulate showing the welcome screen on first load
   useEffect(() => {
-    // Check active session on load
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setIsLoading(false);
-    });
-
-    // Listen for login/logout events
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
+    const hasSeenOnboarding = localStorage.getItem('has_seen_onboarding');
+    if (!hasSeenOnboarding) {
+      setShowOnboarding(true);
+    }
   }, []);
 
-  if (isLoading) return <div className="min-h-screen flex justify-center items-center bg-gray-50 text-blue-600 font-bold">Loading...</div>;
-
-  if (!session) {
-    return <LoginPanel onLoginSuccess={() => setShowOnboarding(true)} />;
-  }
-
-  const userEmail = session.user.email;
-  const userName = session.user.user_metadata?.full_name || userEmail.split('@')[0];
+  const closeOnboarding = () => {
+    setShowOnboarding(false);
+    localStorage.setItem('has_seen_onboarding', 'true'); // Prevents it from popping up on every refresh
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex font-sans">
+      
+      {/* Onboarding Modal */}
       {showOnboarding && (
         <div className="fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-8 text-center shadow-2xl">
+          <div className="bg-white rounded-2xl w-full max-w-md p-8 text-center shadow-2xl relative">
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome, {userName}!</h2>
             <p className="text-gray-600 mb-6">What is the first topic you want to master?</p>
-            <button onClick={() => { setShowOnboarding(false); setIsAddModalOpen(true); }} className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition mb-4">
+            <button onClick={() => { closeOnboarding(); setIsAddModalOpen(true); }} className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition mb-4">
               Add a Topic
             </button>
-            <button onClick={() => setShowOnboarding(false)} className="text-gray-500 font-medium hover:text-gray-800 transition">
+            <button onClick={closeOnboarding} className="text-gray-500 font-medium hover:text-gray-800 transition">
               Skip for now
             </button>
           </div>
         </div>
       )}
 
+      {/* Sidebar Overlay */}
       {isDrawerOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity" onClick={() => setIsDrawerOpen(false)} />}
 
       <Sidebar 
