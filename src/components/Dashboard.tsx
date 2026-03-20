@@ -71,7 +71,7 @@ export default function Dashboard({ onOpenAdd }: DashboardProps) {
           {/* Study Now Button */}
           <button className="w-full group relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center justify-between">
             <div className="text-left relative z-10">
-              <span className="block text-blue-200 text-sm font-semibold mb-1 uppercase tracking-wider">Today's Portion</span>
+              <span className="block text-blue-200 text-sm font-semibold mb-1 uppercase tracking-wider">Today&apos;s Portion</span>
               <span className="block text-2xl font-bold">Continue Learning</span>
             </div>
             <div className="bg-white/20 p-4 rounded-full group-hover:scale-110 transition-transform relative z-10">
@@ -86,7 +86,7 @@ export default function Dashboard({ onOpenAdd }: DashboardProps) {
             <Plus size={32} />
           </div>
           <h3 className="text-xl font-bold text-gray-800 mb-2">Your desk is empty!</h3>
-          <p className="text-gray-500 mb-6">You haven't added any study topics yet. Let the AI build your first curriculum.</p>
+          <p className="text-gray-500 mb-6">You haven&apos;t added any study topics yet. Let the AI build your first curriculum.</p>
           <button onClick={onOpenAdd} className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition shadow-md">
             Add New Topic
           </button>
