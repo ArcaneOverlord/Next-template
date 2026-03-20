@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/layout/Sidebar';
 import Dashboard from '../components/layout/Dashboard'; // Note: Ensure you move Dashboard to the layout folder!
 import LibraryBrowser from '../components/library/LibraryBrowser';
+import LibraryBrowser from '../components/library/BookEditor.tsx';
 import AddContentModal from '../components/AddContentModal';
 import { Menu } from 'lucide-react';
 
@@ -90,6 +91,17 @@ export default function StudyApp() {
             <Dashboard onOpenAdd={() => setIsAddModalOpen(true)} />
           )}
         </main>
+                <main className="p-4 max-w-5xl mx-auto w-full space-y-6">
+          {/* Conditional Rendering based on current state */}
+          {activeBook ? (
+            <BookEditor bookId={activeBook.id} bookName={activeBook.name} />
+          ) : currentPage === 'library' ? (
+            <LibraryBrowser onOpenBook={handleOpenBook} />
+          ) : (
+            <Dashboard onOpenAdd={() => setIsAddModalOpen(true)} />
+          )}
+        </main>
+
       </div>
 
       {isAddModalOpen && <AddContentModal onClose={() => setIsAddModalOpen(false)} />}
