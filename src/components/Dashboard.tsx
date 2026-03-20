@@ -17,7 +17,7 @@ export default function Dashboard() {
         </div>
         <div className="relative z-10">
           <p className="text-white text-xl md:text-2xl font-medium italic leading-snug drop-shadow-md">
-            "The expert in anything was once a beginner."
+            &quot;The expert in anything was once a beginner.&quot;
           </p>
           <p className="text-blue-300 mt-2 font-semibold text-sm tracking-wide">— Aristotle</p>
         </div>
