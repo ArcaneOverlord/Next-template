@@ -1,12 +1,17 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import { Plus, Type, Image as ImageIcon, Grid, Trash2, Search, MoreVertical, Share2, Globe, Save, Move, X, ListTree, RefreshCcw, Download, FileUp } from 'lucide-react';
-import CanvasBlockComponent from './editor/CanvasBlock'; // <-- Make sure path matches where you put CanvasBlock
+import CanvasBlockComponent from './CanvasBlock';
 
-// 1. INLINED TABLE PROMPT
-interface TablePromptProps { onGenerate: (r: number, c: number) => void; onCancel: () => void; }
+// ------------------------------------------------------------------
+// 1. INLINED TABLE PROMPT MODAL
+// ------------------------------------------------------------------
+interface TablePromptProps { onGenerate: (r: number, c: number, name: string) => void; onCancel: () => void; }
 function TablePromptModal({ onGenerate, onCancel }: TablePromptProps) {
-  const [rows, setRows] = useState(3); const [cols, setCols] = useState(3);
+  const [rows, setRows] = useState(3); 
+  const [cols, setCols] = useState(3);
+  const [tableName, setTableName] = useState('New Table');
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-[100] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
@@ -14,20 +19,32 @@ function TablePromptModal({ onGenerate, onCancel }: TablePromptProps) {
           <h3 className="font-bold text-lg text-gray-800">Generate Table</h3>
           <button onClick={onCancel} className="text-gray-400"><X size={20} /></button>
         </div>
-        <div className="flex space-x-4 mb-4">
-          <div className="flex-1"><label className="block text-sm font-semibold mb-1">Rows</label><input type="number" value={rows} onChange={(e) => setRows(Number(e.target.value))} className="w-full p-2 border rounded" /></div>
-          <div className="flex-1"><label className="block text-sm font-semibold mb-1">Cols</label><input type="number" value={cols} onChange={(e) => setCols(Number(e.target.value))} className="w-full p-2 border rounded" /></div>
+        <div className="space-y-4 mb-6">
+          <div>
+            <label className="block text-sm font-semibold mb-1 text-gray-700">Table Name</label>
+            <input type="text" value={tableName} onChange={(e) => setTableName(e.target.value)} className="w-full p-2 border border-gray-300 rounded text-gray-900" placeholder="e.g., User Data" />
+          </div>
+          <div className="flex space-x-4">
+            <div className="flex-1"><label className="block text-sm font-semibold mb-1 text-gray-700">Rows</label><input type="number" min="1" value={rows} onChange={(e) => setRows(Number(e.target.value))} className="w-full p-2 border border-gray-300 rounded text-center text-gray-900" /></div>
+            <div className="flex-1"><label className="block text-sm font-semibold mb-1 text-gray-700">Cols</label><input type="number" min="1" value={cols} onChange={(e) => setCols(Number(e.target.value))} className="w-full p-2 border border-gray-300 rounded text-center text-gray-900" /></div>
+          </div>
         </div>
-        <button onClick={() => onGenerate(rows, cols)} className="w-full bg-blue-600 text-white font-bold py-2 rounded">Generate</button>
+        <button onClick={() => onGenerate(rows, cols, tableName)} className="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 transition">Generate</button>
       </div>
     </div>
   );
 }
 
+// ------------------------------------------------------------------
 // 2. MAIN EDITOR
+// ------------------------------------------------------------------
 export type BlockType = 'text' | 'media' | 'table';
 export type ScrollMode = 'grow' | 'scroll';
-export interface CanvasBlock { id: string; type: BlockType; content: string; x: number; y: number; w: number; h: number | 'auto'; scrollMode: ScrollMode; }
+export interface CanvasBlock { 
+  id: string; type: BlockType; content: string; 
+  x: number; y: number; w: number; h: number | 'auto'; scrollMode: ScrollMode;
+  title?: string; // New field for Table Name
+}
 
 interface BookEditorProps { bookId: string; bookName: string; }
 
@@ -62,13 +79,12 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
   }, [contextMenu]);
 
   // --- ACTIONS ---
-  const addBlock = (type: BlockType, tableRows = 2, tableCols = 2, prefillContent = '') => {
+  const addBlock = (type: BlockType, tableRows = 2, tableCols = 2, prefillContent = '', tableName = '') => {
     let content = prefillContent;
     if (type === 'table' && !prefillContent) {
       content = JSON.stringify(Array(tableRows).fill(Array(tableCols).fill('')));
     }
     
-    // Auto-place below the lowest block to prevent initial overlap
     let startY = 50;
     blocks.forEach(b => {
       const el = document.getElementById(`block-${b.id}`);
@@ -81,31 +97,29 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
       type, content,
       x: 50, y: startY,
       w: type === 'media' ? 300 : type === 'table' ? 400 : 350,
-      h: type === 'media' ? 200 : 'auto', scrollMode: 'grow'
+      h: type === 'media' ? 200 : 'auto', scrollMode: 'grow',
+      title: tableName
     };
     setBlocks([...blocks, newBlock]);
     setShowAddMenu(false);
   };
 
+  const updateBlockContent = (id: string, content: string) => {
+    setBlocks(blocks.map(b => b.id === id ? { ...b, content } : b));
+  };
+
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
-    // Mock Import Logic based on extension
     if (file.name.endsWith('.xlsx') || file.name.endsWith('.csv')) {
-      addBlock('table', 4, 3, '[["Imported","Data","Here"],["...","...","..."]]');
+      addBlock('table', 4, 3, '[["Imported","Data","Here"],["...","...","..."]]', file.name);
     } else if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
-      addBlock('media'); // In a real app, you'd upload the blob and return a URL
+      addBlock('media'); 
     } else {
       addBlock('text', 0, 0, `[Extracted text from ${file.name}]`);
     }
     setShowAddMenu(false);
   };
-  
-    const updateBlockContent = (id: string, content: string) => {
-    setBlocks(blocks.map(b => b.id === id ? { ...b, content } : b));
-  };
-
 
   // --- COLLISION PHYSICS ---
   const handlePointerDown = (e: React.PointerEvent, id: string) => {
@@ -128,23 +142,12 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
     }
   };
 
-    const handlePointerUp = () => {
+  const handlePointerUp = () => {
     if (!draggingBlock) return;
-    
-    // Overlap Resolution Engine: If dropped on another block, push it down
     const draggedEl = document.getElementById(`block-${draggingBlock}`);
     if (draggedEl) {
       const rawRect = draggedEl.getBoundingClientRect();
-      
-      // Create a mutable copy of the DOMRect so TypeScript lets us do math
-      let dRect = {
-        left: rawRect.left,
-        right: rawRect.right,
-        top: rawRect.top,
-        bottom: rawRect.bottom,
-        height: rawRect.height,
-        y: rawRect.y
-      };
+      let dRect = { left: rawRect.left, right: rawRect.right, top: rawRect.top, bottom: rawRect.bottom, height: rawRect.height, y: rawRect.y };
 
       let hasOverlap = true;
       let safeY = blocks.find(b => b.id === draggingBlock)?.y || 0;
@@ -157,14 +160,11 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
           if (!oEl) continue;
           const oRect = oEl.getBoundingClientRect();
           
-          // Check intersection
           if (!(dRect.right < oRect.left || dRect.left > oRect.right || dRect.bottom < oRect.top || dRect.top > oRect.bottom)) {
             hasOverlap = true;
-            safeY = b.y + oRect.height + 20; // Push below the collided object
-            
-            // Update dummy dRect to check again
+            safeY = b.y + oRect.height + 20; 
             dRect.y += (safeY - dRect.y);
-            dRect.top = dRect.y; // Ensure top is updated for the next loop check
+            dRect.top = dRect.y; 
             dRect.bottom = dRect.y + dRect.height;
             break;
           }
@@ -175,25 +175,27 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
     setDraggingBlock(null);
   };
 
-
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-8rem)] relative overflow-hidden">
       
-      {/* TOOLBAR - FIXED SPACING */}
-      <div className="p-4 border-b flex flex-wrap items-center justify-between gap-4 bg-gray-50 z-30">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
+      {/* TOOLBAR */}
+      <div className="p-4 border-b flex items-center justify-between bg-gray-50 z-30">
+        
+        {/* Fixed Search Text Color */}
+        <div className="relative flex-1 max-w-sm mr-4">
           <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
-          <input type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm bg-white" />
+          <input type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500" />
         </div>
 
-        <div className="flex items-center space-x-3 shrink-0" ref={menuRef}>
+        {/* Right Actions - Fixed Dropdown Alignment */}
+        <div className="flex items-center space-x-2 shrink-0 relative" ref={menuRef}>
           {appMode === 'read' && (
             <>
-              <button onClick={() => setAppMode('edit')} className="px-6 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 font-bold text-sm">Edit</button>
+              <button onClick={() => setAppMode('edit')} className="px-5 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 font-bold text-sm">Edit</button>
               <div className="relative">
                 <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="w-10 h-10 flex items-center justify-center bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300"><MoreVertical size={20} /></button>
                 {isMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 shadow-xl rounded-xl py-2 z-50">
+                  <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 shadow-xl rounded-xl py-2 z-50 origin-top-right">
                     <button className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"><ListTree size={16} className="mr-3 text-indigo-500" /> Power Log</button>
                     <button className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"><Download size={16} className="mr-3 text-gray-500" /> Export Note</button>
                     <button className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"><Share2 size={16} className="mr-3 text-gray-500" /> Share</button>
@@ -206,10 +208,13 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
 
           {appMode === 'edit' && (
             <>
+              <button onClick={() => { setTransformBackup(JSON.parse(JSON.stringify(blocks))); setAppMode('transform'); }} className="hidden sm:flex items-center px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 font-bold text-sm"><Move size={16} className="mr-2" /> Transform</button>
+              <button onClick={() => setAppMode('read')} className="hidden sm:flex items-center px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold text-sm"><Save size={16} className="mr-2" /> Save</button>
+              
               <div className="relative">
                 <button onClick={() => setShowAddMenu(!showAddMenu)} className="flex items-center px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-semibold text-sm"><Plus size={16} className="mr-1" /> Add</button>
                 {showAddMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 shadow-xl rounded-xl py-2 z-50">
+                  <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 shadow-xl rounded-xl py-2 z-50 origin-top-right">
                     <button onClick={() => addBlock('text')} className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"><Type size={16} className="mr-3" /> Text Box</button>
                     <button onClick={() => addBlock('media')} className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"><ImageIcon size={16} className="mr-3" /> Media Box</button>
                     <button onClick={() => { setShowTablePrompt(true); setShowAddMenu(false); }} className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100"><Grid size={16} className="mr-3" /> Table Box</button>
@@ -218,24 +223,28 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
                       <FileUp size={16} className="mr-3" /> Import File...
                     </button>
                     <input type="file" ref={fileInputRef} onChange={handleImport} className="hidden" accept=".xlsx,.csv,.docx,.txt,image/*,video/*" />
+                    
+                    {/* Mobile Only Quick Actions */}
+                    <div className="sm:hidden border-t border-gray-100 mt-1 pt-1">
+                      <button onClick={() => { setTransformBackup(JSON.parse(JSON.stringify(blocks))); setAppMode('transform'); setShowAddMenu(false); }} className="w-full flex items-center px-4 py-3 text-sm text-indigo-700 hover:bg-indigo-50 font-bold"><Move size={16} className="mr-3" /> Transform</button>
+                      <button onClick={() => { setAppMode('read'); setShowAddMenu(false); }} className="w-full flex items-center px-4 py-3 text-sm text-blue-600 hover:bg-blue-50 font-bold"><Save size={16} className="mr-3" /> Save Changes</button>
+                    </div>
                   </div>
                 )}
               </div>
-              <button onClick={() => { setTransformBackup(JSON.parse(JSON.stringify(blocks))); setAppMode('transform'); }} className="flex items-center px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 font-bold text-sm"><Move size={16} className="mr-2" /> Transform</button>
-              <button onClick={() => setAppMode('read')} className="flex items-center px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold text-sm"><Save size={16} className="mr-2" /> Save</button>
             </>
           )}
 
           {appMode === 'transform' && (
             <>
-              <button onClick={() => { setBlocks(transformBackup); setAppMode('edit'); }} className="flex items-center px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 font-bold text-sm"><X size={16} className="mr-1" /> Discard</button>
-              <button onClick={() => setAppMode('edit')} className="flex items-center px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold text-sm"><Save size={16} className="mr-2" /> Finish</button>
+              <button onClick={() => { setBlocks(transformBackup); setAppMode('edit'); }} className="flex items-center px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 font-bold text-sm"><X size={16} className="mr-1" /> <span className="hidden sm:inline">Discard</span></button>
+              <button onClick={() => setAppMode('edit')} className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold text-sm"><Save size={16} className="mr-2" /> Finish</button>
             </>
           )}
         </div>
       </div>
 
-      {/* CANVAS - Blocks Pull-to-refresh when in transform mode */}
+      {/* CANVAS */}
       <div 
         ref={canvasRef}
         className={`flex-1 relative overflow-auto p-8 ${appMode === 'read' ? 'bg-white' : appMode === 'transform' ? 'bg-gray-100' : 'bg-gray-50'}`}
@@ -254,7 +263,7 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
         ))}
       </div>
 
-      {showTablePrompt && <TablePromptModal onGenerate={(r, c) => { addBlock('table', r, c); setShowTablePrompt(false); }} onCancel={() => setShowTablePrompt(false)} />}
+      {showTablePrompt && <TablePromptModal onGenerate={(r, c, name) => { addBlock('table', r, c, '', name); setShowTablePrompt(false); }} onCancel={() => setShowTablePrompt(false)} />}
       
       {contextMenu.visible && (
         <div className="fixed z-[100] bg-white border border-gray-200 shadow-2xl rounded-xl py-2 w-48" style={{ top: contextMenu.y, left: contextMenu.x }}>
