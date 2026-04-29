@@ -454,7 +454,7 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
         onPointerUp={handlePointerUp} 
         onPointerLeave={handlePointerUp}
       >
-        {blocks.filter(b => b.content.toLowerCase().includes(searchQuery.toLowerCase())).map((block) => (
+                {blocks.filter(b => b.content.toLowerCase().includes(searchQuery.toLowerCase())).map((block) => (
           <CanvasBlockComponent 
             key={block.id} 
             block={block} 
@@ -465,6 +465,7 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
             onMenuClick={handleMenuClick}
           />
         ))}
+
       </div>
 
       {/* MODALS */}
