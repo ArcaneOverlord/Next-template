@@ -3,16 +3,18 @@ import React, { useRef, useState } from 'react';
 import { Image as ImageIcon, MoreVertical, Upload } from 'lucide-react';
 import { CanvasBlock as BlockData } from './BookEditor'; 
 
+// --- FORCE COMPILE FIX: Optional Props & Ghost Catcher ---
 interface CanvasBlockProps {
   block: BlockData;
   appMode: 'read' | 'edit' | 'transform';
   onUpdate: (id: string, newContent: string) => void;
-  onPointerDown: (e: React.PointerEvent, id: string) => void;
-  onResizeDown: (e: React.PointerEvent, id: string, handle: string) => void;
-  onMenuClick: (x: number, y: number, id: string) => void;
+  onPointerDown?: (e: React.PointerEvent, id: string) => void;
+  onResizeDown?: (e: React.PointerEvent, id: string, handle: string) => void;
+  onMenuClick?: (x: number, y: number, id: string) => void;
+  onContextMenu?: (e: any, id: string) => void; 
 }
 
-export default function CanvasBlock({ block, appMode, onUpdate, onPointerDown, onResizeDown, onMenuClick }: CanvasBlockProps) {
+export default function CanvasBlock({ block, appMode, onUpdate, onPointerDown, onResizeDown, onMenuClick, onContextMenu }: CanvasBlockProps) {
   
   const blockRef = useRef<HTMLDivElement>(null);
   
@@ -46,7 +48,8 @@ export default function CanvasBlock({ block, appMode, onUpdate, onPointerDown, o
 
   const handleMenuClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onMenuClick(e.clientX, e.clientY + 20, block.id);
+    // Use optional chaining just in case
+    onMenuClick?.(e.clientX, e.clientY + 20, block.id);
   };
 
   // Pinch-to-Zoom Engine
@@ -84,17 +87,17 @@ export default function CanvasBlock({ block, appMode, onUpdate, onPointerDown, o
         overflow: 'visible',
         borderRadius: appMode === 'transform' ? '16px' : '8px'
       }}
-      onPointerDown={(e) => onPointerDown(e, block.id)}
+      onPointerDown={(e) => onPointerDown?.(e, block.id)}
     >
       
       {/* Transform Mode Visuals */}
       {appMode === 'transform' && (
         <>
           {/* 4 Corner Custom Resize Handles */}
-          <div onPointerDown={(e) => onResizeDown(e, block.id, 'tl')} className="absolute top-0 left-0 w-6 h-6 -translate-x-1/2 -translate-y-1/2 z-30 cursor-nwse-resize flex items-center justify-center"><div className="w-3 h-3 bg-indigo-600 rounded-full shadow-md"></div></div>
-          <div onPointerDown={(e) => onResizeDown(e, block.id, 'tr')} className="absolute top-0 right-0 w-6 h-6 translate-x-1/2 -translate-y-1/2 z-30 cursor-nesw-resize flex items-center justify-center"><div className="w-3 h-3 bg-indigo-600 rounded-full shadow-md"></div></div>
-          <div onPointerDown={(e) => onResizeDown(e, block.id, 'bl')} className="absolute bottom-0 left-0 w-6 h-6 -translate-x-1/2 translate-y-1/2 z-30 cursor-nesw-resize flex items-center justify-center"><div className="w-3 h-3 bg-indigo-600 rounded-full shadow-md"></div></div>
-          <div onPointerDown={(e) => onResizeDown(e, block.id, 'br')} className="absolute bottom-0 right-0 w-6 h-6 translate-x-1/2 translate-y-1/2 z-30 cursor-nwse-resize flex items-center justify-center"><div className="w-3 h-3 bg-indigo-600 rounded-full shadow-md"></div></div>
+          <div onPointerDown={(e) => onResizeDown?.(e, block.id, 'tl')} className="absolute top-0 left-0 w-6 h-6 -translate-x-1/2 -translate-y-1/2 z-30 cursor-nwse-resize flex items-center justify-center"><div className="w-3 h-3 bg-indigo-600 rounded-full shadow-md"></div></div>
+          <div onPointerDown={(e) => onResizeDown?.(e, block.id, 'tr')} className="absolute top-0 right-0 w-6 h-6 translate-x-1/2 -translate-y-1/2 z-30 cursor-nesw-resize flex items-center justify-center"><div className="w-3 h-3 bg-indigo-600 rounded-full shadow-md"></div></div>
+          <div onPointerDown={(e) => onResizeDown?.(e, block.id, 'bl')} className="absolute bottom-0 left-0 w-6 h-6 -translate-x-1/2 translate-y-1/2 z-30 cursor-nesw-resize flex items-center justify-center"><div className="w-3 h-3 bg-indigo-600 rounded-full shadow-md"></div></div>
+          <div onPointerDown={(e) => onResizeDown?.(e, block.id, 'br')} className="absolute bottom-0 right-0 w-6 h-6 translate-x-1/2 translate-y-1/2 z-30 cursor-nwse-resize flex items-center justify-center"><div className="w-3 h-3 bg-indigo-600 rounded-full shadow-md"></div></div>
           
           {/* Simple Box Menu Button via Click */}
           <button 
