@@ -2,8 +2,52 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Plus, Type, Image as ImageIcon, Grid, Trash2, Search, MoreVertical, Share2, Globe, Save, Move, X, ListTree, RefreshCcw } from 'lucide-react';
 import CanvasBlock from './CanvasBlock';
-import TablePromptModal from './TablePromptModal';
 
+// ------------------------------------------------------------------
+// 1. INLINED TABLE PROMPT MODAL (Bypasses Vercel import errors)
+// ------------------------------------------------------------------
+interface TablePromptProps {
+  onGenerate: (rows: number, cols: number) => void;
+  onCancel: () => void;
+}
+
+function TablePromptModal({ onGenerate, onCancel }: TablePromptProps) {
+  const [rows, setRows] = useState(3);
+  const [cols, setCols] = useState(3);
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-[100] flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-bold text-lg text-gray-800">Generate Table</h3>
+          <button onClick={onCancel} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+        </div>
+        <div className="space-y-4">
+          <div className="flex space-x-4">
+            <div className="flex-1">
+              <label className="block text-sm font-semibold text-gray-600 mb-1">Rows</label>
+              <input type="number" min="1" max="20" value={rows} onChange={(e) => setRows(Number(e.target.value))} className="w-full p-2 border border-gray-300 rounded-lg text-center" />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-semibold text-gray-600 mb-1">Columns</label>
+              <input type="number" min="1" max="10" value={cols} onChange={(e) => setCols(Number(e.target.value))} className="w-full p-2 border border-gray-300 rounded-lg text-center" />
+            </div>
+          </div>
+          <button 
+            onClick={() => onGenerate(rows, cols)} 
+            className="w-full bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 transition"
+          >
+            Generate
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------
+// 2. MAIN BOOK EDITOR COMPONENT
+// ------------------------------------------------------------------
 interface BookEditorProps { bookId: string; bookName: string; }
 export type BlockType = 'text' | 'media' | 'table';
 export type ScrollMode = 'grow' | 'scroll';
@@ -75,7 +119,7 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
     const block = blocks.find(b => b.id === id);
     if (rect && block) {
       setDraggingBlock(id);
-      setInitialDragPos({ x: block.x, y: block.y }); // Save to revert if collision
+      setInitialDragPos({ x: block.x, y: block.y }); 
       setDragOffset({ x: e.clientX - rect.left - block.x, y: e.clientY - rect.top - block.y });
     }
   };
@@ -192,7 +236,7 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
       
       {contextMenu.visible && (
         <div className="fixed z-[100] bg-white border border-gray-200 shadow-2xl rounded-xl py-2 w-48" style={{ top: contextMenu.y, left: contextMenu.x }}>
-          <button onClick={() => setBlocks(blocks.filter(b => b.id !== contextMenu.blockId))} className="w-full flex items-center px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 transition"><Trash2 size={16} className="mr-3" /> Delete Box</button>
+          <button onClick={() => { setBlocks(blocks.filter(b => b.id !== contextMenu.blockId)); setContextMenu({ ...contextMenu, visible: false }); }} className="w-full flex items-center px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 transition"><Trash2 size={16} className="mr-3" /> Delete Box</button>
           <button onClick={() => {
             setBlocks(blocks.map(b => b.id === contextMenu.blockId ? { ...b, scrollMode: b.scrollMode === 'grow' ? 'scroll' : 'grow', h: b.scrollMode === 'grow' ? 150 : 'auto' } : b));
             setContextMenu({ ...contextMenu, visible: false });
