@@ -5,7 +5,7 @@ import {
   MoreVertical, Share2, Globe, Save, Move, X, ListTree, 
   RefreshCcw, Download, FileUp 
 } from 'lucide-react';
-import CanvasBlockComponent from './editor/CanvasBlock';
+import CanvasBlockComponent from './CanvasBlock';
 
 // ------------------------------------------------------------------
 // 1. INLINED TABLE PROMPT MODAL
@@ -492,7 +492,7 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
           >
             <Trash2 size={16} className="mr-3" /> Delete Box
           </button>
-         <button 
+          <button 
             onClick={() => {
               setBlocks(blocks.map(b => b.id === contextMenu.blockId 
                 ? { ...b, scrollMode: b.scrollMode === 'grow' ? 'scroll' : 'grow', h: b.scrollMode === 'grow' ? 150 : 'auto' } 
