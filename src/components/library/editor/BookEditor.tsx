@@ -6,7 +6,11 @@ import CanvasBlockComponent from './CanvasBlock';
 // ------------------------------------------------------------------
 // 1. INLINED TABLE PROMPT MODAL
 // ------------------------------------------------------------------
-interface TablePromptProps { onGenerate: (r: number, c: number, name: string) => void; onCancel: () => void; }
+interface TablePromptProps { 
+  onGenerate: (r: number, c: number, name: string) => void; 
+  onCancel: () => void; 
+}
+
 function TablePromptModal({ onGenerate, onCancel }: TablePromptProps) {
   const [rows, setRows] = useState(3); 
   const [cols, setCols] = useState(3);
@@ -22,14 +26,45 @@ function TablePromptModal({ onGenerate, onCancel }: TablePromptProps) {
         <div className="space-y-4 mb-6">
           <div>
             <label className="block text-sm font-semibold mb-1 text-gray-700">Table Name</label>
-            <input type="text" value={tableName} onChange={(e) => setTableName(e.target.value)} className="w-full p-2 border border-gray-300 rounded text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g., User Data" />
+            <input 
+              type="text" 
+              value={tableName} 
+              onChange={(e) => setTableName(e.target.value)} 
+              className="w-full p-2 border border-gray-300 rounded text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none" 
+              placeholder="e.g., User Data" 
+            />
           </div>
           <div className="flex space-x-4">
-            <div className="flex-1"><label className="block text-sm font-semibold mb-1 text-gray-700">Rows</label><input type="number" min="1" max="20" value={rows} onChange={(e) => setRows(Number(e.target.value))} className="w-full p-2 border border-gray-300 rounded text-center text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none" /></div>
-            <div className="flex-1"><label className="block text-sm font-semibold mb-1 text-gray-700">Cols</label><input type="number" min="1" max="10" value={cols} onChange={(e) => setCols(Number(e.target.value))} className="w-full p-2 border border-gray-300 rounded text-center text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none" /></div>
+            <div className="flex-1">
+              <label className="block text-sm font-semibold mb-1 text-gray-700">Rows</label>
+              <input 
+                type="number" 
+                min="1" 
+                max="20" 
+                value={rows} 
+                onChange={(e) => setRows(Number(e.target.value))} 
+                className="w-full p-2 border border-gray-300 rounded text-center text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none" 
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-semibold mb-1 text-gray-700">Cols</label>
+              <input 
+                type="number" 
+                min="1" 
+                max="10" 
+                value={cols} 
+                onChange={(e) => setCols(Number(e.target.value))} 
+                className="w-full p-2 border border-gray-300 rounded text-center text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none" 
+              />
+            </div>
           </div>
         </div>
-        <button onClick={() => onGenerate(rows, cols, tableName)} className="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 transition">Generate</button>
+        <button 
+          onClick={() => onGenerate(rows, cols, tableName)} 
+          className="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 transition"
+        >
+          Generate
+        </button>
       </div>
     </div>
   );
@@ -40,13 +75,23 @@ function TablePromptModal({ onGenerate, onCancel }: TablePromptProps) {
 // ------------------------------------------------------------------
 export type BlockType = 'text' | 'media' | 'table';
 export type ScrollMode = 'grow' | 'scroll';
+
 export interface CanvasBlock { 
-  id: string; type: BlockType; content: string; 
-  x: number; y: number; w: number; h: number | 'auto'; scrollMode: ScrollMode;
+  id: string; 
+  type: BlockType; 
+  content: string; 
+  x: number; 
+  y: number; 
+  w: number; 
+  h: number | string; // Changed from 'auto' literal to string to satisfy strict linters
+  scrollMode: ScrollMode;
   title?: string;
 }
 
-interface BookEditorProps { bookId: string; bookName: string; }
+interface BookEditorProps { 
+  bookId: string; 
+  bookName: string; 
+}
 
 export default function BookEditor({ bookId, bookName }: BookEditorProps) {
   const [appMode, setAppMode] = useState<'read' | 'edit' | 'transform'>('read');
@@ -55,7 +100,10 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [showTablePrompt, setShowTablePrompt] = useState(false);
-  const [contextMenu, setContextMenu] = useState<{ visible: boolean, x: number, y: number, blockId: string | null }>({ visible: false, x: 0, y: 0, blockId: null });
+  
+  const [contextMenu, setContextMenu] = useState<{ visible: boolean; x: number; y: number; blockId: string | null }>({ 
+    visible: false, x: 0, y: 0, blockId: null 
+  });
   
   const menuRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -70,9 +118,12 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false); setShowAddMenu(false);
+        setIsMenuOpen(false); 
+        setShowAddMenu(false);
       }
-      if (contextMenu.visible) setContextMenu({ ...contextMenu, visible: false });
+      if (contextMenu.visible) {
+        setContextMenu({ ...contextMenu, visible: false });
+      }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -92,19 +143,33 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
       if (b.y + h > startY) startY = b.y + h + 20;
     });
 
+    // Explicitly define dimensions to avoid nested ternary operator issues
+    let blockWidth = 250;
+    let blockHeight: number | string = 'auto';
+    
+    if (type === 'media') {
+      blockWidth = 300;
+      blockHeight = 200;
+    } else if (type === 'table') {
+      blockWidth = 400;
+    }
+
     const newBlock: CanvasBlock = {
       id: Math.random().toString(36).substr(2, 9),
-      type, content,
-      x: 50, y: startY,
-      w: type === 'media' ? 300 : type === 'table' ? 400 : 350,
-      h: type === 'media' ? 200 : 'auto', scrollMode: 'grow',
+      type, 
+      content,
+      x: 50, 
+      y: startY,
+      w: blockWidth,
+      h: blockHeight, 
+      scrollMode: 'grow',
       title: tableName
     };
+    
     setBlocks([...blocks, newBlock]);
     setShowAddMenu(false);
   };
 
-  // Restored: Function to allow child blocks to update their own state
   const updateBlockContent = (id: string, content: string) => {
     setBlocks(blocks.map(b => b.id === id ? { ...b, content } : b));
   };
@@ -112,6 +177,7 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
     if (file.name.endsWith('.xlsx') || file.name.endsWith('.csv')) {
       addBlock('table', 4, 3, '[["Imported","Data","Here"],["...","...","..."]]', file.name);
     } else if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
@@ -149,8 +215,14 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
     if (draggedEl) {
       const rawRect = draggedEl.getBoundingClientRect();
       
-      // Fixed: Create mutable copy to satisfy TypeScript
-      let dRect = { left: rawRect.left, right: rawRect.right, top: rawRect.top, bottom: rawRect.bottom, height: rawRect.height, y: rawRect.y };
+      const dRect = { 
+        left: rawRect.left, 
+        right: rawRect.right, 
+        top: rawRect.top, 
+        bottom: rawRect.bottom, 
+        height: rawRect.height, 
+        y: rawRect.y 
+      };
 
       let hasOverlap = true;
       let safeY = blocks.find(b => b.id === draggingBlock)?.y || 0;
@@ -178,19 +250,37 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
     setDraggingBlock(null);
   };
 
+  // Explicit function to handle context menu safely outside of JSX
+  const handleBlockContextMenu = (e: any, id: string) => {
+    let clientX = e.clientX;
+    let clientY = e.clientY;
+    
+    // Safely extract touch coordinates if present
+    if (e.touches && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    }
+    
+    setContextMenu({ visible: true, x: clientX, y: clientY, blockId: id });
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-8rem)] relative overflow-hidden">
       
       {/* TOOLBAR */}
       <div className="p-4 border-b flex items-center justify-between bg-gray-50 z-30">
         
-        {/* Fixed Search Text Color */}
         <div className="relative flex-1 max-w-sm mr-4">
           <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
-          <input type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 outline-none" />
+          <input 
+            type="text" 
+            placeholder="Search..." 
+            value={searchQuery} 
+            onChange={(e) => setSearchQuery(e.target.value)} 
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 outline-none" 
+          />
         </div>
 
-        {/* Right Actions - Fixed Dropdown Alignment */}
         <div className="flex items-center space-x-2 shrink-0 relative" ref={menuRef}>
           {appMode === 'read' && (
             <>
@@ -227,7 +317,6 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
                     </button>
                     <input type="file" ref={fileInputRef} onChange={handleImport} className="hidden" accept=".xlsx,.csv,.docx,.txt,image/*,video/*" />
                     
-                    {/* Mobile Only Quick Actions */}
                     <div className="sm:hidden border-t border-gray-100 mt-1 pt-1">
                       <button onClick={() => { setTransformBackup(JSON.parse(JSON.stringify(blocks))); setAppMode('transform'); setShowAddMenu(false); }} className="w-full flex items-center px-4 py-3 text-sm text-indigo-700 hover:bg-indigo-50 font-bold"><Move size={16} className="mr-3" /> Transform</button>
                       <button onClick={() => { setAppMode('read'); setShowAddMenu(false); }} className="w-full flex items-center px-4 py-3 text-sm text-blue-600 hover:bg-blue-50 font-bold"><Save size={16} className="mr-3" /> Save Changes</button>
@@ -252,10 +341,40 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
         ref={canvasRef}
         className={`flex-1 relative overflow-auto p-8 ${appMode === 'read' ? 'bg-white' : appMode === 'transform' ? 'bg-gray-100' : 'bg-gray-50'}`}
         style={{ touchAction: appMode === 'transform' ? 'none' : 'auto', overscrollBehavior: 'none' }}
-        onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerLeave={handlePointerUp}
+        onPointerMove={handlePointerMove} 
+        onPointerUp={handlePointerUp} 
+        onPointerLeave={handlePointerUp}
       >
         {blocks.filter(b => b.content.toLowerCase().includes(searchQuery.toLowerCase())).map((block) => (
           <CanvasBlockComponent 
-            key={block.id} block={block} appMode={appMode} 
-            onUpdate={updateBlockContent} onPointerDown={handlePointerDown} onContextMenu={(e, id) => {
-              const x = 'touches' in e ? e.touches[0].clientX
+            key={block.id} 
+            block={block} 
+            appMode={appMode} 
+            onUpdate={updateBlockContent} 
+            onPointerDown={handlePointerDown} 
+            onContextMenu={handleBlockContextMenu}
+          />
+        ))}
+      </div>
+
+      {showTablePrompt && (
+        <TablePromptModal 
+          onGenerate={(r, c, name) => { addBlock('table', r, c, '', name); setShowTablePrompt(false); }} 
+          onCancel={() => setShowTablePrompt(false)} 
+        />
+      )}
+      
+      {contextMenu.visible && (
+        <div className="fixed z-[100] bg-white border border-gray-200 shadow-2xl rounded-xl py-2 w-48" style={{ top: contextMenu.y, left: contextMenu.x }}>
+          <button onClick={() => { setBlocks(blocks.filter(b => b.id !== contextMenu.blockId)); setContextMenu({ ...contextMenu, visible: false }); }} className="w-full flex items-center px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50"><Trash2 size={16} className="mr-3" /> Delete Box</button>
+          <button onClick={() => {
+            setBlocks(blocks.map(b => b.id === contextMenu.blockId ? { ...b, scrollMode: b.scrollMode === 'grow' ? 'scroll' : 'grow', h: b.scrollMode === 'grow' ? 150 : 'auto' } : b));
+            setContextMenu({ ...contextMenu, visible: false });
+          }} className="w-full flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <RefreshCcw size={16} className="mr-3 text-blue-500" /> {blocks.find(b => b.id === contextMenu.blockId)?.scrollMode === 'grow' ? 'Set to Scroll' : 'Set to Grow'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
