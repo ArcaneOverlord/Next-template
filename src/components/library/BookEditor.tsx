@@ -101,6 +101,11 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
     }
     setShowAddMenu(false);
   };
+  
+    const updateBlockContent = (id: string, content: string) => {
+    setBlocks(blocks.map(b => b.id === id ? { ...b, content } : b));
+  };
+
 
   // --- COLLISION PHYSICS ---
   const handlePointerDown = (e: React.PointerEvent, id: string) => {
