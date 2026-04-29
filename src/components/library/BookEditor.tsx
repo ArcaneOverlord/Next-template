@@ -1,12 +1,16 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import { Plus, Type, Image as ImageIcon, Grid, Trash2, Search, MoreVertical, Share2, Globe, Save, Move, X, ListTree, RefreshCcw, Download, FileUp } from 'lucide-react';
-import CanvasBlockComponent from './editor/CanvasBlock';
+import CanvasBlockComponent from './CanvasBlock';
 
 // ------------------------------------------------------------------
 // 1. INLINED TABLE PROMPT MODAL
 // ------------------------------------------------------------------
-interface TablePromptProps { onGenerate: (r: number, c: number, name: string) => void; onCancel: () => void; }
+interface TablePromptProps { 
+  onGenerate: (r: number, c: number, name: string) => void; 
+  onCancel: () => void; 
+}
+
 function TablePromptModal({ onGenerate, onCancel }: TablePromptProps) {
   const [rows, setRows] = useState(3); 
   const [cols, setCols] = useState(3);
@@ -17,19 +21,50 @@ function TablePromptModal({ onGenerate, onCancel }: TablePromptProps) {
       <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-bold text-lg text-gray-800">Generate Table</h3>
-          <button onClick={onCancel} className="text-gray-400"><X size={20} /></button>
+          <button onClick={onCancel} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
         </div>
         <div className="space-y-4 mb-6">
           <div>
             <label className="block text-sm font-semibold mb-1 text-gray-700">Table Name</label>
-            <input type="text" value={tableName} onChange={(e) => setTableName(e.target.value)} className="w-full p-2 border border-gray-300 rounded text-gray-900" placeholder="e.g., User Data" />
+            <input 
+              type="text" 
+              value={tableName} 
+              onChange={(e) => setTableName(e.target.value)} 
+              className="w-full p-2 border border-gray-300 rounded text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none" 
+              placeholder="e.g., User Data" 
+            />
           </div>
           <div className="flex space-x-4">
-            <div className="flex-1"><label className="block text-sm font-semibold mb-1 text-gray-700">Rows</label><input type="number" min="1" value={rows} onChange={(e) => setRows(Number(e.target.value))} className="w-full p-2 border border-gray-300 rounded text-center text-gray-900" /></div>
-            <div className="flex-1"><label className="block text-sm font-semibold mb-1 text-gray-700">Cols</label><input type="number" min="1" value={cols} onChange={(e) => setCols(Number(e.target.value))} className="w-full p-2 border border-gray-300 rounded text-center text-gray-900" /></div>
+            <div className="flex-1">
+              <label className="block text-sm font-semibold mb-1 text-gray-700">Rows</label>
+              <input 
+                type="number" 
+                min="1" 
+                max="20" 
+                value={rows} 
+                onChange={(e) => setRows(Number(e.target.value))} 
+                className="w-full p-2 border border-gray-300 rounded text-center text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none" 
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-semibold mb-1 text-gray-700">Cols</label>
+              <input 
+                type="number" 
+                min="1" 
+                max="10" 
+                value={cols} 
+                onChange={(e) => setCols(Number(e.target.value))} 
+                className="w-full p-2 border border-gray-300 rounded text-center text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none" 
+              />
+            </div>
           </div>
         </div>
-        <button onClick={() => onGenerate(rows, cols, tableName)} className="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 transition">Generate</button>
+        <button 
+          onClick={() => onGenerate(rows, cols, tableName)} 
+          className="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 transition"
+        >
+          Generate
+        </button>
       </div>
     </div>
   );
@@ -40,13 +75,23 @@ function TablePromptModal({ onGenerate, onCancel }: TablePromptProps) {
 // ------------------------------------------------------------------
 export type BlockType = 'text' | 'media' | 'table';
 export type ScrollMode = 'grow' | 'scroll';
+
 export interface CanvasBlock { 
-  id: string; type: BlockType; content: string; 
-  x: number; y: number; w: number; h: number | 'auto'; scrollMode: ScrollMode;
-  title?: string; // New field for Table Name
+  id: string; 
+  type: BlockType; 
+  content: string; 
+  x: number; 
+  y: number; 
+  w: number; 
+  h: number | string; 
+  scrollMode: ScrollMode;
+  title?: string;
 }
 
-interface BookEditorProps { bookId: string; bookName: string; }
+interface BookEditorProps { 
+  bookId: string; 
+  bookName: string; 
+}
 
 export default function BookEditor({ bookId, bookName }: BookEditorProps) {
   const [appMode, setAppMode] = useState<'read' | 'edit' | 'transform'>('read');
@@ -55,7 +100,10 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [showTablePrompt, setShowTablePrompt] = useState(false);
-  const [contextMenu, setContextMenu] = useState<{ visible: boolean, x: number, y: number, blockId: string | null }>({ visible: false, x: 0, y: 0, blockId: null });
+  
+  const [contextMenu, setContextMenu] = useState<{ visible: boolean; x: number; y: number; blockId: string | null }>({ 
+    visible: false, x: 0, y: 0, blockId: null 
+  });
   
   const menuRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -70,9 +118,12 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false); setShowAddMenu(false);
+        setIsMenuOpen(false); 
+        setShowAddMenu(false);
       }
-      if (contextMenu.visible) setContextMenu({ ...contextMenu, visible: false });
+      if (contextMenu.visible) {
+        setContextMenu({ ...contextMenu, visible: false });
+      }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -92,14 +143,29 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
       if (b.y + h > startY) startY = b.y + h + 20;
     });
 
+    // Make default boxes much larger for easier transformation
+    let blockWidth = 350;
+    let blockHeight: number | string = 'auto';
+    
+    if (type === 'media') {
+      blockWidth = 400;
+      blockHeight = 300;
+    } else if (type === 'table') {
+      blockWidth = 500;
+    }
+
     const newBlock: CanvasBlock = {
       id: Math.random().toString(36).substr(2, 9),
-      type, content,
-      x: 50, y: startY,
-      w: type === 'media' ? 300 : type === 'table' ? 400 : 350,
-      h: type === 'media' ? 200 : 'auto', scrollMode: 'grow',
+      type, 
+      content,
+      x: 50, 
+      y: startY,
+      w: blockWidth,
+      h: blockHeight, 
+      scrollMode: 'grow',
       title: tableName
     };
+    
     setBlocks([...blocks, newBlock]);
     setShowAddMenu(false);
   };
@@ -111,10 +177,14 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
     if (file.name.endsWith('.xlsx') || file.name.endsWith('.csv')) {
       addBlock('table', 4, 3, '[["Imported","Data","Here"],["...","...","..."]]', file.name);
     } else if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
-      addBlock('media'); 
+      // In a real app, you would upload to a server. 
+      // For now, we will create a local object URL to display it immediately.
+      const localUrl = URL.createObjectURL(file);
+      addBlock('media', 0, 0, localUrl); 
     } else {
       addBlock('text', 0, 0, `[Extracted text from ${file.name}]`);
     }
@@ -147,7 +217,15 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
     const draggedEl = document.getElementById(`block-${draggingBlock}`);
     if (draggedEl) {
       const rawRect = draggedEl.getBoundingClientRect();
-      let dRect = { left: rawRect.left, right: rawRect.right, top: rawRect.top, bottom: rawRect.bottom, height: rawRect.height, y: rawRect.y };
+      
+      const dRect = { 
+        left: rawRect.left, 
+        right: rawRect.right, 
+        top: rawRect.top, 
+        bottom: rawRect.bottom, 
+        height: rawRect.height, 
+        y: rawRect.y 
+      };
 
       let hasOverlap = true;
       let safeY = blocks.find(b => b.id === draggingBlock)?.y || 0;
@@ -175,19 +253,35 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
     setDraggingBlock(null);
   };
 
+  const handleBlockContextMenu = (e: any, id: string) => {
+    let clientX = e.clientX;
+    let clientY = e.clientY;
+    
+    if (e.touches && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    }
+    
+    setContextMenu({ visible: true, x: clientX, y: clientY, blockId: id });
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-8rem)] relative overflow-hidden">
       
       {/* TOOLBAR */}
       <div className="p-4 border-b flex items-center justify-between bg-gray-50 z-30">
         
-        {/* Fixed Search Text Color */}
         <div className="relative flex-1 max-w-sm mr-4">
           <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
-          <input type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500" />
+          <input 
+            type="text" 
+            placeholder="Search..." 
+            value={searchQuery} 
+            onChange={(e) => setSearchQuery(e.target.value)} 
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 outline-none" 
+          />
         </div>
 
-        {/* Right Actions - Fixed Dropdown Alignment */}
         <div className="flex items-center space-x-2 shrink-0 relative" ref={menuRef}>
           {appMode === 'read' && (
             <>
@@ -208,9 +302,9 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
 
           {appMode === 'edit' && (
             <>
-              <button onClick={() => { setTransformBackup(JSON.parse(JSON.stringify(blocks))); setAppMode('transform'); }} className="hidden sm:flex items-center px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 font-bold text-sm"><Move size={16} className="mr-2" /> Transform</button>
               <button onClick={() => setAppMode('read')} className="hidden sm:flex items-center px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold text-sm"><Save size={16} className="mr-2" /> Save</button>
               
+              {/* STRICTLY CONTENT ADDITION MENU */}
               <div className="relative">
                 <button onClick={() => setShowAddMenu(!showAddMenu)} className="flex items-center px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-semibold text-sm"><Plus size={16} className="mr-1" /> Add</button>
                 {showAddMenu && (
@@ -223,12 +317,17 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
                       <FileUp size={16} className="mr-3" /> Import File...
                     </button>
                     <input type="file" ref={fileInputRef} onChange={handleImport} className="hidden" accept=".xlsx,.csv,.docx,.txt,image/*,video/*" />
-                    
-                    {/* Mobile Only Quick Actions */}
-                    <div className="sm:hidden border-t border-gray-100 mt-1 pt-1">
-                      <button onClick={() => { setTransformBackup(JSON.parse(JSON.stringify(blocks))); setAppMode('transform'); setShowAddMenu(false); }} className="w-full flex items-center px-4 py-3 text-sm text-indigo-700 hover:bg-indigo-50 font-bold"><Move size={16} className="mr-3" /> Transform</button>
-                      <button onClick={() => { setAppMode('read'); setShowAddMenu(false); }} className="w-full flex items-center px-4 py-3 text-sm text-blue-600 hover:bg-blue-50 font-bold"><Save size={16} className="mr-3" /> Save Changes</button>
-                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* TOOLS 3-DOT MENU */}
+              <div className="relative">
+                <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="w-10 h-10 flex items-center justify-center bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300"><MoreVertical size={20} /></button>
+                {isMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 shadow-xl rounded-xl py-2 z-50 origin-top-right">
+                    <button onClick={() => { setTransformBackup(JSON.parse(JSON.stringify(blocks))); setAppMode('transform'); setIsMenuOpen(false); }} className="w-full flex items-center px-4 py-3 text-sm font-bold text-indigo-700 hover:bg-indigo-50"><Move size={16} className="mr-3" /> Transform</button>
+                    <button onClick={() => { setAppMode('read'); setIsMenuOpen(false); }} className="sm:hidden w-full flex items-center px-4 py-3 text-sm font-bold text-blue-600 hover:bg-blue-50 border-t border-gray-100"><Save size={16} className="mr-3" /> Save Changes</button>
                   </div>
                 )}
               </div>
@@ -237,45 +336,4 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
 
           {appMode === 'transform' && (
             <>
-              <button onClick={() => { setBlocks(transformBackup); setAppMode('edit'); }} className="flex items-center px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 font-bold text-sm"><X size={16} className="mr-1" /> <span className="hidden sm:inline">Discard</span></button>
-              <button onClick={() => setAppMode('edit')} className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold text-sm"><Save size={16} className="mr-2" /> Finish</button>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* CANVAS */}
-      <div 
-        ref={canvasRef}
-        className={`flex-1 relative overflow-auto p-8 ${appMode === 'read' ? 'bg-white' : appMode === 'transform' ? 'bg-gray-100' : 'bg-gray-50'}`}
-        style={{ touchAction: appMode === 'transform' ? 'none' : 'auto', overscrollBehavior: 'none' }}
-        onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerLeave={handlePointerUp}
-      >
-        {blocks.filter(b => b.content.toLowerCase().includes(searchQuery.toLowerCase())).map((block) => (
-          <CanvasBlockComponent 
-            key={block.id} block={block} appMode={appMode} 
-            onUpdate={updateBlockContent} onPointerDown={handlePointerDown} onContextMenu={(e, id) => {
-              const x = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
-              const y = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
-              setContextMenu({ visible: true, x, y, blockId: id });
-            }}
-          />
-        ))}
-      </div>
-
-      {showTablePrompt && <TablePromptModal onGenerate={(r, c, name) => { addBlock('table', r, c, '', name); setShowTablePrompt(false); }} onCancel={() => setShowTablePrompt(false)} />}
-      
-      {contextMenu.visible && (
-        <div className="fixed z-[100] bg-white border border-gray-200 shadow-2xl rounded-xl py-2 w-48" style={{ top: contextMenu.y, left: contextMenu.x }}>
-          <button onClick={() => { setBlocks(blocks.filter(b => b.id !== contextMenu.blockId)); setContextMenu({ ...contextMenu, visible: false }); }} className="w-full flex items-center px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50"><Trash2 size={16} className="mr-3" /> Delete Box</button>
-          <button onClick={() => {
-            setBlocks(blocks.map(b => b.id === contextMenu.blockId ? { ...b, scrollMode: b.scrollMode === 'grow' ? 'scroll' : 'grow', h: b.scrollMode === 'grow' ? 150 : 'auto' } : b));
-            setContextMenu({ ...contextMenu, visible: false });
-          }} className="w-full flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50">
-            <RefreshCcw size={16} className="mr-3 text-blue-500" /> {blocks.find(b => b.id === contextMenu.blockId)?.scrollMode === 'grow' ? 'Set to Scroll' : 'Set to Grow'}
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
+              <button onClick={() => { setBlocks(transformBackup); setAppMode('edit'); }} className="flex items-center px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 font-bold
