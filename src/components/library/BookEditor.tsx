@@ -5,7 +5,7 @@ import {
   MoreVertical, Share2, Globe, Save, Move, X, ListTree, 
   RefreshCcw, Download, FileUp 
 } from 'lucide-react';
-import CanvasBlockComponent from './CanvasBlock';
+import CanvasBlockComponent from './editor/CanvasBlock';
 
 // ------------------------------------------------------------------
 // 1. INLINED TABLE PROMPT MODAL
