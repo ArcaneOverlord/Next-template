@@ -118,7 +118,6 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
   const [blocks, setBlocks] = useState<CanvasBlock[]>([]);
   const [transformBackup, setTransformBackup] = useState<CanvasBlock[]>([]);
   
-  // Dragging & Resizing Engine State
   const [draggingBlock, setDraggingBlock] = useState<string | null>(null);
   const [resizing, setResizing] = useState<{ id: string, handle: string, initialRect: any } | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -454,7 +453,7 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
         onPointerUp={handlePointerUp} 
         onPointerLeave={handlePointerUp}
       >
-                {blocks.filter(b => b.content.toLowerCase().includes(searchQuery.toLowerCase())).map((block) => (
+        {blocks.filter(b => b.content.toLowerCase().includes(searchQuery.toLowerCase())).map((block) => (
           <CanvasBlockComponent 
             key={block.id} 
             block={block} 
@@ -465,7 +464,6 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
             onMenuClick={handleMenuClick}
           />
         ))}
-
       </div>
 
       {/* MODALS */}
