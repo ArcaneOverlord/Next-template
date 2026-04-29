@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import { Plus, Type, Image as ImageIcon, Grid, Trash2, Search, MoreVertical, Share2, Globe, Save, Move, X, ListTree, RefreshCcw } from 'lucide-react';
-import CanvasBlock from './CanvasBlock';
+import CanvasBlock from './editor/CanvasBlock';
 
 // ------------------------------------------------------------------
 // 1. INLINED TABLE PROMPT MODAL (Bypasses Vercel import errors)
