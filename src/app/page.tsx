@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/layout/Sidebar';
 import Dashboard from '../components/layout/Dashboard';
 import LibraryBrowser from '../components/library/LibraryBrowser';
-import BookEditor from '../components/library/BookEditor'; // <-- Fixed Import
+import BookEditor from '../components/library/editor/BookEditor'; // <-- Fixed Import
 import AddContentModal from '../components/AddContentModal';
 import { Menu } from 'lucide-react';
 
