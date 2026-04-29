@@ -123,13 +123,24 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
     }
   };
 
-  const handlePointerUp = () => {
+    const handlePointerUp = () => {
     if (!draggingBlock) return;
     
     // Overlap Resolution Engine: If dropped on another block, push it down
     const draggedEl = document.getElementById(`block-${draggingBlock}`);
     if (draggedEl) {
-      const dRect = draggedEl.getBoundingClientRect();
+      const rawRect = draggedEl.getBoundingClientRect();
+      
+      // Create a mutable copy of the DOMRect so TypeScript lets us do math
+      let dRect = {
+        left: rawRect.left,
+        right: rawRect.right,
+        top: rawRect.top,
+        bottom: rawRect.bottom,
+        height: rawRect.height,
+        y: rawRect.y
+      };
+
       let hasOverlap = true;
       let safeY = blocks.find(b => b.id === draggingBlock)?.y || 0;
 
@@ -145,8 +156,10 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
           if (!(dRect.right < oRect.left || dRect.left > oRect.right || dRect.bottom < oRect.top || dRect.top > oRect.bottom)) {
             hasOverlap = true;
             safeY = b.y + oRect.height + 20; // Push below the collided object
+            
             // Update dummy dRect to check again
             dRect.y += (safeY - dRect.y);
+            dRect.top = dRect.y; // Ensure top is updated for the next loop check
             dRect.bottom = dRect.y + dRect.height;
             break;
           }
@@ -156,6 +169,7 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
     }
     setDraggingBlock(null);
   };
+
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-8rem)] relative overflow-hidden">
