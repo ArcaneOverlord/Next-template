@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { Image as ImageIcon, MoreVertical, Upload } from 'lucide-react';
 import { CanvasBlock as BlockData } from './BookEditor'; 
 
@@ -17,10 +17,6 @@ interface CanvasBlockProps {
 export default function CanvasBlock({ block, appMode, onUpdate, onPointerDown, onResizeDown, onMenuClick, onContextMenu }: CanvasBlockProps) {
   
   const blockRef = useRef<HTMLDivElement>(null);
-  
-  // Table Pinch-To-Zoom State
-  const [tableScale, setTableScale] = useState(1);
-  const initialDist = useRef(0);
 
   let tableData: string[][] = [];
   if (block.type === 'table') {
@@ -48,24 +44,20 @@ export default function CanvasBlock({ block, appMode, onUpdate, onPointerDown, o
 
   const handleMenuClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Use optional chaining just in case
     onMenuClick?.(e.clientX, e.clientY + 20, block.id);
   };
 
-  // Pinch-to-Zoom Engine
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 2) {
-      initialDist.current = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-    }
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (e.touches.length === 2) {
-      e.preventDefault(); // Stop screen scrolling while zooming
-      const dist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-      const zoomDelta = dist / initialDist.current;
-      setTableScale(prev => Math.min(Math.max(0.5, prev * zoomDelta), 3)); // Clamp scale between 0.5x and 3x
-      initialDist.current = dist;
+  const getHeadingClass = (level: number) => {
+    switch(level) {
+      case 1: return 'text-4xl font-extrabold text-gray-900'; // Title
+      case 2: return 'text-3xl font-bold text-gray-800'; // Section
+      case 3: return 'text-2xl font-bold text-gray-800'; // Subsection
+      case 4: return 'text-xl font-semibold text-gray-800'; // Segment
+      case 5: return 'text-lg font-semibold text-gray-800'; // Clause
+      case 6: return 'text-base font-semibold text-gray-800 uppercase tracking-wide'; // Sub-clause
+      case 7: return 'text-sm font-bold text-gray-800'; // Point
+      case 8: return 'text-sm font-normal text-gray-700'; // Detail
+      default: return 'text-base text-gray-800';
     }
   };
 
@@ -113,6 +105,7 @@ export default function CanvasBlock({ block, appMode, onUpdate, onPointerDown, o
       {/* Content Container */}
       <div className={`w-full flex-1 flex flex-col ${appMode === 'transform' ? 'pointer-events-none opacity-80' : 'p-3'} ${block.type !== 'table' && block.scrollMode === 'scroll' ? 'overflow-y-auto' : ''}`}>
         
+        {/* TEXT BLOCK */}
         {block.type === 'text' && (
           <textarea
             readOnly={appMode === 'read' || appMode === 'transform'}
@@ -125,6 +118,20 @@ export default function CanvasBlock({ block, appMode, onUpdate, onPointerDown, o
           />
         )}
 
+        {/* HEADING BLOCK (Dynamic scaling based on Power Level) */}
+        {block.type === 'heading' && (
+          <textarea
+            readOnly={appMode === 'read' || appMode === 'transform'}
+            value={block.content}
+            onChange={(e) => onUpdate(block.id, e.target.value)}
+            onInput={handleAutoResize}
+            placeholder={`Level ${block.powerLevel} Heading...`}
+            className={`w-full h-full resize-none border-none outline-none bg-transparent leading-tight ${appMode === 'read' ? 'cursor-default' : ''} ${getHeadingClass(block.powerLevel || 1)}`}
+            style={{ minHeight: '40px', overflow: block.scrollMode === 'scroll' ? 'auto' : 'hidden' }}
+          />
+        )}
+
+        {/* MEDIA BLOCK */}
         {block.type === 'media' && (
           <div className="w-full h-full flex flex-col">
             {appMode === 'edit' && (
@@ -154,42 +161,36 @@ export default function CanvasBlock({ block, appMode, onUpdate, onPointerDown, o
           </div>
         )}
 
+        {/* TABLE BLOCK (Pinch zoom removed, borders permanently visible) */}
         {block.type === 'table' && (
-          <div 
-            className="w-full h-full flex flex-col relative"
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-          >
+          <div className="w-full h-full flex flex-col relative">
             {appMode !== 'read' && (
-              <div className="text-sm font-bold text-gray-800 bg-gray-100 p-2 border border-gray-300 border-b-0 rounded-t shrink-0 flex items-center justify-between z-10">
+              <div className="text-sm font-bold text-gray-800 bg-gray-100 p-2 border border-gray-300 border-b-0 rounded-t shrink-0 flex items-center justify-center z-10">
                 <span>{block.title || 'Table Data'}</span>
-                <span className="text-[10px] text-gray-400 font-normal">Pinch to Zoom</span>
               </div>
             )}
             
-            <div className={`w-full ${block.scrollMode === 'scroll' ? 'flex-1 overflow-auto' : 'overflow-x-auto'} ${appMode === 'read' ? '' : 'border border-gray-300 rounded-b relative'}`}>
-              <div style={{ transform: `scale(${tableScale})`, transformOrigin: 'top left', transition: 'transform 0.1s ease-out' }}>
-                <table className="w-full border-collapse">
-                  <tbody>
-                    {tableData.map((row, rIndex) => (
-                      <tr key={rIndex}>
-                        {row.map((cell, cIndex) => (
-                          <td key={cIndex} className={`border ${appMode === 'read' ? 'border-transparent' : 'border-gray-200'} p-0 align-top bg-white`}>
-                            <textarea
-                              readOnly={appMode === 'read' || appMode === 'transform'}
-                              value={cell}
-                              onChange={(e) => updateTableCell(rIndex, cIndex, e.target.value)}
-                              onInput={handleAutoResize}
-                              className="w-full min-w-[80px] bg-transparent outline-none p-2 resize-none text-sm text-gray-900 overflow-hidden"
-                              rows={1}
-                            />
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            <div className={`w-full ${block.scrollMode === 'scroll' ? 'flex-1 overflow-auto' : 'overflow-x-auto'} border border-gray-300 ${appMode === 'read' ? 'rounded' : 'rounded-b'} bg-white`}>
+              <table className="w-full border-collapse">
+                <tbody>
+                  {tableData.map((row, rIndex) => (
+                    <tr key={rIndex}>
+                      {row.map((cell, cIndex) => (
+                        <td key={cIndex} className="border border-gray-300 p-0 align-top bg-white">
+                          <textarea
+                            readOnly={appMode === 'read' || appMode === 'transform'}
+                            value={cell}
+                            onChange={(e) => updateTableCell(rIndex, cIndex, e.target.value)}
+                            onInput={handleAutoResize}
+                            className="w-full min-w-[100px] bg-transparent outline-none p-2 resize-none text-sm text-gray-900 overflow-hidden"
+                            rows={1}
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
