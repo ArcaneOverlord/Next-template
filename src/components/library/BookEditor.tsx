@@ -1,6 +1,10 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, Type, Image as ImageIcon, Grid, Trash2, Search, MoreVertical, Share2, Globe, Save, Move, X, ListTree, RefreshCcw, Download, FileUp } from 'lucide-react';
+import { 
+  Plus, Type, Image as ImageIcon, Grid, Trash2, Search, 
+  MoreVertical, Share2, Globe, Save, Move, X, ListTree, 
+  RefreshCcw, Download, FileUp 
+} from 'lucide-react';
 import CanvasBlockComponent from './CanvasBlock';
 
 // ------------------------------------------------------------------
@@ -21,7 +25,9 @@ function TablePromptModal({ onGenerate, onCancel }: TablePromptProps) {
       <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-bold text-lg text-gray-800">Generate Table</h3>
-          <button onClick={onCancel} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+          <button onClick={onCancel} className="text-gray-400 hover:text-gray-600">
+            <X size={20} />
+          </button>
         </div>
         <div className="space-y-4 mb-6">
           <div>
@@ -143,7 +149,6 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
       if (b.y + h > startY) startY = b.y + h + 20;
     });
 
-    // Make default boxes much larger for easier transformation
     let blockWidth = 350;
     let blockHeight: number | string = 'auto';
     
@@ -181,8 +186,6 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
     if (file.name.endsWith('.xlsx') || file.name.endsWith('.csv')) {
       addBlock('table', 4, 3, '[["Imported","Data","Here"],["...","...","..."]]', file.name);
     } else if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
-      // In a real app, you would upload to a server. 
-      // For now, we will create a local object URL to display it immediately.
       const localUrl = URL.createObjectURL(file);
       addBlock('media', 0, 0, localUrl); 
     } else {
@@ -266,74 +269,229 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-8rem)] relative overflow-hidden">
-      
-      {/* TOOLBAR */}
-      <div className="p-4 border-b flex items-center justify-between bg-gray-50 z-30">
+    <>
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-8rem)] relative overflow-hidden">
         
-        <div className="relative flex-1 max-w-sm mr-4">
-          <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
-          <input 
-            type="text" 
-            placeholder="Search..." 
-            value={searchQuery} 
-            onChange={(e) => setSearchQuery(e.target.value)} 
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 outline-none" 
-          />
+        {/* TOOLBAR */}
+        <div className="p-4 border-b flex items-center justify-between bg-gray-50 z-30">
+          
+          <div className="relative flex-1 max-w-sm mr-4">
+            <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+            <input 
+              type="text" 
+              placeholder="Search..." 
+              value={searchQuery} 
+              onChange={(e) => setSearchQuery(e.target.value)} 
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 outline-none" 
+            />
+          </div>
+
+          <div className="flex items-center space-x-2 shrink-0 relative" ref={menuRef}>
+            
+            {/* READ MODE BUTTONS */}
+            {appMode === 'read' && (
+              <>
+                <button 
+                  onClick={() => setAppMode('edit')} 
+                  className="px-5 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 font-bold text-sm"
+                >
+                  Edit
+                </button>
+                <div className="relative">
+                  <button 
+                    onClick={() => setIsMenuOpen(!isMenuOpen)} 
+                    className="w-10 h-10 flex items-center justify-center bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300"
+                  >
+                    <MoreVertical size={20} />
+                  </button>
+                  {isMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 shadow-xl rounded-xl py-2 z-50 origin-top-right">
+                      <button className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">
+                        <ListTree size={16} className="mr-3 text-indigo-500" /> Power Log
+                      </button>
+                      <button className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">
+                        <Download size={16} className="mr-3 text-gray-500" /> Export Note
+                      </button>
+                      <button className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">
+                        <Share2 size={16} className="mr-3 text-gray-500" /> Share
+                      </button>
+                      <button className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">
+                        <Globe size={16} className="mr-3 text-gray-500" /> Publish
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* EDIT MODE BUTTONS */}
+            {appMode === 'edit' && (
+              <>
+                <button 
+                  onClick={() => setAppMode('read')} 
+                  className="hidden sm:flex items-center px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold text-sm"
+                >
+                  <Save size={16} className="mr-2" /> Save
+                </button>
+                
+                <div className="relative">
+                  <button 
+                    onClick={() => setShowAddMenu(!showAddMenu)} 
+                    className="flex items-center px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-semibold text-sm"
+                  >
+                    <Plus size={16} className="mr-1" /> Add
+                  </button>
+                  {showAddMenu && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 shadow-xl rounded-xl py-2 z-50 origin-top-right">
+                      <button 
+                        onClick={() => addBlock('text')} 
+                        className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        <Type size={16} className="mr-3" /> Text Box
+                      </button>
+                      <button 
+                        onClick={() => addBlock('media')} 
+                        className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        <ImageIcon size={16} className="mr-3" /> Media Box
+                      </button>
+                      <button 
+                        onClick={() => { setShowTablePrompt(true); setShowAddMenu(false); }} 
+                        className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100"
+                      >
+                        <Grid size={16} className="mr-3" /> Table Box
+                      </button>
+                      
+                      <button 
+                        onClick={() => fileInputRef.current?.click()} 
+                        className="w-full flex items-center px-4 py-3 text-sm text-blue-600 hover:bg-blue-50 font-medium"
+                      >
+                        <FileUp size={16} className="mr-3" /> Import File...
+                      </button>
+                      <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        onChange={handleImport} 
+                        className="hidden" 
+                        accept=".xlsx,.csv,.docx,.txt,image/*,video/*" 
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="relative">
+                  <button 
+                    onClick={() => setIsMenuOpen(!isMenuOpen)} 
+                    className="w-10 h-10 flex items-center justify-center bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300"
+                  >
+                    <MoreVertical size={20} />
+                  </button>
+                  {isMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 shadow-xl rounded-xl py-2 z-50 origin-top-right">
+                      <button 
+                        onClick={() => { 
+                          setTransformBackup(JSON.parse(JSON.stringify(blocks))); 
+                          setAppMode('transform'); 
+                          setIsMenuOpen(false); 
+                        }} 
+                        className="w-full flex items-center px-4 py-3 text-sm font-bold text-indigo-700 hover:bg-indigo-50"
+                      >
+                        <Move size={16} className="mr-3" /> Transform
+                      </button>
+                      <button 
+                        onClick={() => { setAppMode('read'); setIsMenuOpen(false); }} 
+                        className="sm:hidden w-full flex items-center px-4 py-3 text-sm font-bold text-blue-600 hover:bg-blue-50 border-t border-gray-100"
+                      >
+                        <Save size={16} className="mr-3" /> Save Changes
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* TRANSFORM MODE BUTTONS */}
+            {appMode === 'transform' && (
+              <>
+                <button 
+                  onClick={() => { setBlocks(transformBackup); setAppMode('edit'); }} 
+                  className="flex items-center px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 font-bold text-sm"
+                >
+                  <X size={16} className="mr-1" /> <span className="hidden sm:inline">Discard</span>
+                </button>
+                <button 
+                  onClick={() => setAppMode('edit')} 
+                  className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold text-sm"
+                >
+                  <Save size={16} className="mr-2" /> Finish
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center space-x-2 shrink-0 relative" ref={menuRef}>
-          {appMode === 'read' && (
-            <>
-              <button onClick={() => setAppMode('edit')} className="px-5 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 font-bold text-sm">Edit</button>
-              <div className="relative">
-                <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="w-10 h-10 flex items-center justify-center bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300"><MoreVertical size={20} /></button>
-                {isMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 shadow-xl rounded-xl py-2 z-50 origin-top-right">
-                    <button className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"><ListTree size={16} className="mr-3 text-indigo-500" /> Power Log</button>
-                    <button className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"><Download size={16} className="mr-3 text-gray-500" /> Export Note</button>
-                    <button className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"><Share2 size={16} className="mr-3 text-gray-500" /> Share</button>
-                    <button className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"><Globe size={16} className="mr-3 text-gray-500" /> Publish</button>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
+        {/* CANVAS */}
+        <div 
+          ref={canvasRef}
+          className={`flex-1 relative overflow-auto p-8 ${appMode === 'read' ? 'bg-white' : appMode === 'transform' ? 'bg-gray-100' : 'bg-gray-50'}`}
+          style={{ touchAction: appMode === 'transform' ? 'none' : 'auto', overscrollBehavior: 'none' }}
+          onPointerMove={handlePointerMove} 
+          onPointerUp={handlePointerUp} 
+          onPointerLeave={handlePointerUp}
+        >
+          {blocks.filter(b => b.content.toLowerCase().includes(searchQuery.toLowerCase())).map((block) => (
+            <CanvasBlockComponent 
+              key={block.id} 
+              block={block} 
+              appMode={appMode} 
+              onUpdate={updateBlockContent} 
+              onPointerDown={handlePointerDown} 
+              onContextMenu={handleBlockContextMenu}
+            />
+          ))}
+        </div>
 
-          {appMode === 'edit' && (
-            <>
-              <button onClick={() => setAppMode('read')} className="hidden sm:flex items-center px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold text-sm"><Save size={16} className="mr-2" /> Save</button>
-              
-              {/* STRICTLY CONTENT ADDITION MENU */}
-              <div className="relative">
-                <button onClick={() => setShowAddMenu(!showAddMenu)} className="flex items-center px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-semibold text-sm"><Plus size={16} className="mr-1" /> Add</button>
-                {showAddMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 shadow-xl rounded-xl py-2 z-50 origin-top-right">
-                    <button onClick={() => addBlock('text')} className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"><Type size={16} className="mr-3" /> Text Box</button>
-                    <button onClick={() => addBlock('media')} className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"><ImageIcon size={16} className="mr-3" /> Media Box</button>
-                    <button onClick={() => { setShowTablePrompt(true); setShowAddMenu(false); }} className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100"><Grid size={16} className="mr-3" /> Table Box</button>
-                    
-                    <button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center px-4 py-3 text-sm text-blue-600 hover:bg-blue-50 font-medium">
-                      <FileUp size={16} className="mr-3" /> Import File...
-                    </button>
-                    <input type="file" ref={fileInputRef} onChange={handleImport} className="hidden" accept=".xlsx,.csv,.docx,.txt,image/*,video/*" />
-                  </div>
-                )}
-              </div>
-
-              {/* TOOLS 3-DOT MENU */}
-              <div className="relative">
-                <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="w-10 h-10 flex items-center justify-center bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300"><MoreVertical size={20} /></button>
-                {isMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 shadow-xl rounded-xl py-2 z-50 origin-top-right">
-                    <button onClick={() => { setTransformBackup(JSON.parse(JSON.stringify(blocks))); setAppMode('transform'); setIsMenuOpen(false); }} className="w-full flex items-center px-4 py-3 text-sm font-bold text-indigo-700 hover:bg-indigo-50"><Move size={16} className="mr-3" /> Transform</button>
-                    <button onClick={() => { setAppMode('read'); setIsMenuOpen(false); }} className="sm:hidden w-full flex items-center px-4 py-3 text-sm font-bold text-blue-600 hover:bg-blue-50 border-t border-gray-100"><Save size={16} className="mr-3" /> Save Changes</button>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-
-          {appMode === 'transform' && (
-            <>
-              <button onClick={() => { setBlocks(transformBackup); setAppMode('edit'); }} className="flex items-center px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 font-bold
+         {/* MODALS */}
+        {showTablePrompt && (
+          <TablePromptModal 
+            onGenerate={(r, c, name) => { 
+              addBlock('table', r, c, '', name); 
+              setShowTablePrompt(false); 
+            }} 
+            onCancel={() => setShowTablePrompt(false)} 
+          />
+        )}
+        
+        {contextMenu.visible && (
+          <div 
+            className="fixed z-[100] bg-white border border-gray-200 shadow-2xl rounded-xl py-2 w-48" 
+            style={{ top: contextMenu.y, left: contextMenu.x }}
+          >
+            <button 
+              onClick={() => { 
+                setBlocks(blocks.filter(b => b.id !== contextMenu.blockId)); 
+                setContextMenu({ ...contextMenu, visible: false }); 
+              }} 
+              className="w-full flex items-center px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50"
+            >
+              <Trash2 size={16} className="mr-3" /> Delete Box
+            </button>
+            <button 
+              onClick={() => {
+                setBlocks(blocks.map(b => b.id === contextMenu.blockId 
+                  ? { ...b, scrollMode: b.scrollMode === 'grow' ? 'scroll' : 'grow', h: b.scrollMode === 'grow' ? 150 : 'auto' } 
+                  : b
+                ));
+                setContextMenu({ ...contextMenu, visible: false });
+              }} 
+              className="w-full flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              <RefreshCcw size={16} className="mr-3 text-blue-500" /> 
+              {blocks.find(b => b.id === contextMenu.blockId)?.scrollMode === 'grow' ? 'Set to Scroll' : 'Set to Grow'}
+            </button>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
