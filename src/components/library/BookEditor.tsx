@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import { Plus, Type, Image as ImageIcon, Grid, Trash2, Search, MoreVertical, Share2, Globe, Save, Move, X, ListTree, RefreshCcw, Download, FileUp } from 'lucide-react';
-import CanvasBlockComponent from './CanvasBlock';
+import CanvasBlockComponent from './editor/CanvasBlock';
 
 interface TablePromptProps { onGenerate: (r: number, c: number, name: string) => void; onCancel: () => void; }
 function TablePromptModal({ onGenerate, onCancel }: TablePromptProps) {
