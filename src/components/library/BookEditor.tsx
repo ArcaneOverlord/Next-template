@@ -5,7 +5,7 @@ import {
   MoreVertical, Share2, Globe, Save, Move, X, ListTree, 
   RefreshCcw, Download, FileUp 
 } from 'lucide-react';
-import CanvasBlockComponent from './editor/CanvasBlock';
+import CanvasBlockComponent from './CanvasBlock';
 
 // ------------------------------------------------------------------
 // 1. INLINED TABLE PROMPT MODAL
@@ -118,6 +118,7 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
   const [blocks, setBlocks] = useState<CanvasBlock[]>([]);
   const [transformBackup, setTransformBackup] = useState<CanvasBlock[]>([]);
   
+  // Dragging & Resizing Engine State
   const [draggingBlock, setDraggingBlock] = useState<string | null>(null);
   const [resizing, setResizing] = useState<{ id: string, handle: string, initialRect: any } | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -150,24 +151,32 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
       if (b.y + h > startY) startY = b.y + h + 20;
     });
 
-    let blockWidth = 350;
-    let blockHeight: number | string = 'auto';
+    // 1. Snug Fit Logic: Calculate available device width
+    const canvasW = canvasRef.current?.clientWidth || window.innerWidth;
+    const horizontalPadding = 32; // Assuming p-4 (16px left + 16px right)
+    const maxAvailableWidth = canvasW - horizontalPadding;
+
+    let targetWidth = 350;
+    let targetHeight: number | string = 'auto';
     
     if (type === 'media') {
-      blockWidth = 400;
-      blockHeight = 300;
+      targetWidth = 400;
+      targetHeight = 300;
     } else if (type === 'table') {
-      blockWidth = 500;
+      targetWidth = 500;
     }
+
+    // Clamp the width to never exceed the screen size
+    const finalWidth = Math.min(targetWidth, maxAvailableWidth);
 
     const newBlock: CanvasBlock = {
       id: Math.random().toString(36).substr(2, 9),
       type, 
       content,
-      x: 50, 
+      x: 16, // Lock initial X to the left margin
       y: startY,
-      w: blockWidth,
-      h: blockHeight, 
+      w: finalWidth,
+      h: targetHeight, 
       scrollMode: 'grow',
       title: tableName
     };
@@ -223,15 +232,24 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
   const handlePointerMove = (e: React.PointerEvent) => {
     if (appMode !== 'transform') return;
     const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
     
+    const horizontalPadding = 32; // Wall offset
+
     // Handle Resizing via 4 Corners
-    if (resizing && rect) {
+    if (resizing) {
       const dx = e.clientX - dragOffset.x;
       const dy = e.clientY - dragOffset.y;
       let { x, y, w, h } = resizing.initialRect;
 
-      if (resizing.handle.includes('r')) w = Math.max(150, w + dx);
-      if (resizing.handle.includes('l')) { w = Math.max(150, w - dx); x += dx; }
+      // 2. Brick Wall Logic for Resizing
+      if (resizing.handle.includes('r')) {
+        const maxWidth = rect.width - x - horizontalPadding;
+        w = Math.min(Math.max(150, w + dx), maxWidth);
+      }
+      if (resizing.handle.includes('l')) { 
+        w = Math.max(150, w - dx); x += dx; 
+      }
       if (resizing.handle.includes('b')) h = Math.max(100, h + dy);
       if (resizing.handle.includes('t')) { h = Math.max(100, h - dy); y += dy; }
 
@@ -240,8 +258,17 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
     }
 
     // Handle Dragging
-    if (draggingBlock && rect) {
-      const newX = Math.max(0, e.clientX - rect.left - dragOffset.x);
+    if (draggingBlock) {
+      const activeBlock = blocks.find(b => b.id === draggingBlock);
+      const blockW = activeBlock?.w || 300;
+
+      // 3. Brick Wall Logic for Dragging
+      const minX = 0;
+      const maxX = Math.max(0, rect.width - blockW - horizontalPadding);
+
+      let newX = e.clientX - rect.left - dragOffset.x;
+      newX = Math.max(minX, Math.min(newX, maxX)); // Clamp it between the walls!
+      
       const newY = Math.max(0, e.clientY - rect.top - dragOffset.y);
       setBlocks(blocks.map(b => b.id === draggingBlock ? { ...b, x: newX, y: newY } : b));
     }
@@ -444,16 +471,16 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
         </div>
       </div>
 
-      {/* CANVAS */}
+      {/* CANVAS - Force horizontal hidden */}
       <div 
         ref={canvasRef}
-        className={`flex-1 relative overflow-auto p-8 ${appMode === 'read' ? 'bg-white' : appMode === 'transform' ? 'bg-gray-100' : 'bg-gray-50'}`}
+        className={`flex-1 relative overflow-x-hidden overflow-y-auto p-4 sm:p-8 ${appMode === 'read' ? 'bg-white' : appMode === 'transform' ? 'bg-gray-100' : 'bg-gray-50'}`}
         style={{ touchAction: appMode === 'transform' ? 'none' : 'auto', overscrollBehavior: 'none' }}
         onPointerMove={handlePointerMove} 
         onPointerUp={handlePointerUp} 
         onPointerLeave={handlePointerUp}
       >
-                {blocks.filter(b => b.content.toLowerCase().includes(searchQuery.toLowerCase())).map((block) => (
+        {blocks.filter(b => b.content.toLowerCase().includes(searchQuery.toLowerCase())).map((block) => (
           <CanvasBlockComponent 
             key={block.id} 
             block={block} 
@@ -464,7 +491,6 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
             onMenuClick={handleMenuClick}
           />
         ))}
-
       </div>
 
       {/* MODALS */}
