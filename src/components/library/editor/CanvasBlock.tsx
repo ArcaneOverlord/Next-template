@@ -3,7 +3,6 @@ import React, { useRef } from 'react';
 import { Image as ImageIcon, MoreVertical, Upload } from 'lucide-react';
 import { CanvasBlock as BlockData } from './BookEditor'; 
 
-// --- FORCE COMPILE FIX: Optional Props & Ghost Catcher ---
 interface CanvasBlockProps {
   block: BlockData;
   appMode: 'read' | 'edit' | 'transform';
@@ -14,7 +13,7 @@ interface CanvasBlockProps {
   onContextMenu?: (e: any, id: string) => void; 
 }
 
-export default function CanvasBlock({ block, appMode, onUpdate, onPointerDown, onResizeDown, onMenuClick, onContextMenu }: CanvasBlockProps) {
+export default function CanvasBlock({ block, appMode, onUpdate, onPointerDown, onResizeDown, onMenuClick }: CanvasBlockProps) {
   
   const blockRef = useRef<HTMLDivElement>(null);
 
@@ -49,14 +48,14 @@ export default function CanvasBlock({ block, appMode, onUpdate, onPointerDown, o
 
   const getHeadingClass = (level: number) => {
     switch(level) {
-      case 1: return 'text-4xl font-extrabold text-gray-900'; // Title
-      case 2: return 'text-3xl font-bold text-gray-800'; // Section
-      case 3: return 'text-2xl font-bold text-gray-800'; // Subsection
-      case 4: return 'text-xl font-semibold text-gray-800'; // Segment
-      case 5: return 'text-lg font-semibold text-gray-800'; // Clause
-      case 6: return 'text-base font-semibold text-gray-800 uppercase tracking-wide'; // Sub-clause
-      case 7: return 'text-sm font-bold text-gray-800'; // Point
-      case 8: return 'text-sm font-normal text-gray-700'; // Detail
+      case 1: return 'text-4xl font-extrabold text-gray-900'; 
+      case 2: return 'text-3xl font-bold text-gray-800'; 
+      case 3: return 'text-2xl font-bold text-gray-800'; 
+      case 4: return 'text-xl font-semibold text-gray-800'; 
+      case 5: return 'text-lg font-semibold text-gray-800'; 
+      case 6: return 'text-base font-semibold text-gray-800 uppercase tracking-wide'; 
+      case 7: return 'text-sm font-bold text-gray-800'; 
+      case 8: return 'text-sm font-normal text-gray-700'; 
       default: return 'text-base text-gray-800';
     }
   };
@@ -91,7 +90,6 @@ export default function CanvasBlock({ block, appMode, onUpdate, onPointerDown, o
           <div onPointerDown={(e) => onResizeDown?.(e, block.id, 'bl')} className="absolute bottom-0 left-0 w-6 h-6 -translate-x-1/2 translate-y-1/2 z-30 cursor-nesw-resize flex items-center justify-center"><div className="w-3 h-3 bg-indigo-600 rounded-full shadow-md"></div></div>
           <div onPointerDown={(e) => onResizeDown?.(e, block.id, 'br')} className="absolute bottom-0 right-0 w-6 h-6 translate-x-1/2 translate-y-1/2 z-30 cursor-nwse-resize flex items-center justify-center"><div className="w-3 h-3 bg-indigo-600 rounded-full shadow-md"></div></div>
           
-          {/* Simple Box Menu Button via Click */}
           <button 
             onClick={handleMenuClick}
             onPointerDown={(e) => e.stopPropagation()} 
@@ -131,11 +129,11 @@ export default function CanvasBlock({ block, appMode, onUpdate, onPointerDown, o
           />
         )}
 
-        {/* MEDIA BLOCK */}
+        {/* MEDIA BLOCK (Fixed to completely remove empty space in Read mode) */}
         {block.type === 'media' && (
           <div className="w-full h-full flex flex-col">
             {appMode === 'edit' && (
-              <div className="flex flex-col mb-3 space-y-3 bg-gray-50 p-2 rounded-lg border border-gray-100">
+              <div className="flex flex-col mb-3 space-y-3 bg-gray-50 p-2 rounded-lg border border-gray-100 shrink-0">
                 <input type="text" placeholder="Paste Media URL here..." value={block.content} onChange={(e) => onUpdate(block.id, e.target.value)} className="w-full text-xs p-2 border border-gray-200 rounded text-gray-900 bg-white outline-none focus:border-blue-500" />
                 <div className="flex items-center space-x-2">
                   <div className="h-px bg-gray-200 flex-1"></div>
@@ -149,28 +147,44 @@ export default function CanvasBlock({ block, appMode, onUpdate, onPointerDown, o
               </div>
             )}
             
-            {block.content ? (
-               // eslint-disable-next-line @next/next/no-img-element
-              <img src={block.content} alt="Media" className="w-full h-full object-contain rounded-lg" />
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-gray-400 bg-gray-100 rounded-lg min-h-[150px]">
-                <ImageIcon size={32} className="mb-2 text-gray-300" />
-                <span className="text-xs font-medium">No Media Provided</span>
-              </div>
-            )}
+            {/* Display Logic: Uses h-auto in grow mode to shrink-wrap perfectly */}
+            <div className={`w-full flex flex-col items-center justify-center ${block.scrollMode === 'grow' ? '' : 'flex-1 min-h-0'}`}>
+              {block.content ? (
+                <>
+                  <img 
+                    src={block.content} 
+                    alt="Media" 
+                    className={`w-full rounded-lg ${block.scrollMode === 'grow' ? 'h-auto' : 'h-full object-contain'}`} 
+                  />
+                  {block.title && block.title.trim() !== '' && (
+                    <div className="mt-2 text-sm font-medium text-gray-700 text-center shrink-0 w-full break-words">
+                      {block.title}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center text-gray-400 bg-gray-100 w-full h-full rounded-lg min-h-[150px]">
+                  <ImageIcon size={32} className="mb-2 text-gray-300" />
+                  <span className="text-xs font-medium">No Media Provided</span>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
-        {/* TABLE BLOCK (Pinch zoom removed, borders permanently visible) */}
+        {/* TABLE BLOCK (Only shows title bar if title exists) */}
         {block.type === 'table' && (
           <div className="w-full h-full flex flex-col relative">
-            {appMode !== 'read' && (
+            
+            {/* Conditional Title Bar */}
+            {block.title && block.title.trim() !== '' && (
               <div className="text-sm font-bold text-gray-800 bg-gray-100 p-2 border border-gray-300 border-b-0 rounded-t shrink-0 flex items-center justify-center z-10">
-                <span>{block.title || 'Table Data'}</span>
+                <span>{block.title}</span>
               </div>
             )}
             
-            <div className={`w-full ${block.scrollMode === 'scroll' ? 'flex-1 overflow-auto' : 'overflow-x-auto'} border border-gray-300 ${appMode === 'read' ? 'rounded' : 'rounded-b'} bg-white`}>
+            {/* Conditional border radius depending on whether the title bar above it exists */}
+            <div className={`w-full ${block.scrollMode === 'scroll' ? 'flex-1 overflow-auto' : 'overflow-x-auto'} border border-gray-300 ${(!block.title || block.title.trim() === '') ? 'rounded' : 'rounded-b'} bg-white`}>
               <table className="w-full border-collapse">
                 <tbody>
                   {tableData.map((row, rIndex) => (

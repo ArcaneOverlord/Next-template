@@ -18,7 +18,7 @@ interface TablePromptProps {
 function TablePromptModal({ onGenerate, onCancel }: TablePromptProps) {
   const [rows, setRows] = useState(3); 
   const [cols, setCols] = useState(3);
-  const [tableName, setTableName] = useState('New Table');
+  const [tableName, setTableName] = useState(''); // Default to empty
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-[100] flex items-center justify-center p-4">
@@ -31,13 +31,13 @@ function TablePromptModal({ onGenerate, onCancel }: TablePromptProps) {
         </div>
         <div className="space-y-4 mb-6">
           <div>
-            <label className="block text-sm font-semibold mb-1 text-gray-700">Table Name</label>
+            <label className="block text-sm font-semibold mb-1 text-gray-700">Table Name (Optional)</label>
             <input 
               type="text" 
               value={tableName} 
               onChange={(e) => setTableName(e.target.value)} 
               className="w-full p-2 border border-gray-300 rounded text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none" 
-              placeholder="e.g., User Data" 
+              placeholder="e.g., Financial Data" 
             />
           </div>
           <div className="flex space-x-4">
@@ -349,6 +349,8 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
     setContextMenu({ visible: true, x, y, blockId: id });
   };
 
+  const activeBlockData = blocks.find(b => b.id === contextMenu.blockId);
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-8rem)] relative overflow-hidden">
       
@@ -550,21 +552,38 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
       )}
       
       {/* BLOCK CONTEXT MENU */}
-      {contextMenu.visible && (
+      {contextMenu.visible && activeBlockData && (
         <div 
           className="fixed z-[100] bg-white border border-gray-200 shadow-2xl rounded-xl py-2 w-56 flex flex-col" 
           style={{ top: contextMenu.y, left: contextMenu.x }}
         >
-          {/* Power Slider specifically for Headings */}
-          {blocks.find(b => b.id === contextMenu.blockId)?.type === 'heading' && (
+          {/* TITLE INPUT for Media & Tables */}
+          {(activeBlockData.type === 'table' || activeBlockData.type === 'media') && (
+            <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 rounded-t-xl mb-1">
+              <label className="block text-xs font-bold text-indigo-700 mb-1">Box Title (Optional)</label>
+              <input 
+                type="text" 
+                value={activeBlockData.title || ''} 
+                onChange={(e) => {
+                  const newTitle = e.target.value;
+                  setBlocks(blocks.map(b => b.id === contextMenu.blockId ? { ...b, title: newTitle } : b));
+                }} 
+                placeholder="Enter title..."
+                className="w-full p-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 text-gray-900"
+              />
+            </div>
+          )}
+
+          {/* POWER SLIDER specifically for Headings */}
+          {activeBlockData.type === 'heading' && (
             <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 rounded-t-xl mb-1">
               <label className="flex justify-between text-xs font-bold text-indigo-700 mb-2">
                 <span>Power Level</span>
-                <span>Lvl {blocks.find(b => b.id === contextMenu.blockId)?.powerLevel}</span>
+                <span>Lvl {activeBlockData.powerLevel}</span>
               </label>
               <input 
                 type="range" min="1" max="8" 
-                value={blocks.find(b => b.id === contextMenu.blockId)?.powerLevel || 1} 
+                value={activeBlockData.powerLevel || 1} 
                 onChange={(e) => {
                   const newPower = parseInt(e.target.value);
                   setBlocks(blocks.map(b => b.id === contextMenu.blockId ? { ...b, powerLevel: newPower } : b));
@@ -585,7 +604,7 @@ export default function BookEditor({ bookId, bookName }: BookEditorProps) {
             className="w-full flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             <RefreshCcw size={16} className="mr-3 text-blue-500" /> 
-            {blocks.find(b => b.id === contextMenu.blockId)?.scrollMode === 'grow' ? 'Set to Scroll' : 'Set to Grow'}
+            {activeBlockData.scrollMode === 'grow' ? 'Set to Scroll' : 'Set to Grow'}
           </button>
           
           <button 
